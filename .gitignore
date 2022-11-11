@@ -1,0 +1,4 @@
+*.sln
+*.csproj
+client/Logs/
+client/Library/
