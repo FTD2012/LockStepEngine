@@ -2,3 +2,5 @@
 *.csproj
 client/Logs/
 client/Library/
+client/Temp/
+client/obj/
