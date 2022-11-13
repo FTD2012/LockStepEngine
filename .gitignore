@@ -4,3 +4,7 @@ client/Logs/
 client/Library/
 client/Temp/
 client/obj/
+client/Packages/
+client/client.sln.DotSettings.user
+client/packages.config
+client/App.config

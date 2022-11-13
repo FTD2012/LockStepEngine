@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LockStep.Util
+namespace LockStepEngine
 {
     // TODO: ljm >>> add to manager system
     public static class LTime

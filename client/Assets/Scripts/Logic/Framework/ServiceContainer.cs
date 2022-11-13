@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace LockStep.Game
+namespace LockStepEngine
 {
     // TODO: ljm >>> refactor to manager
     public abstract class ServiceContainer : IServiceContainer

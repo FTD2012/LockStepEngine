@@ -1,4 +1,4 @@
-﻿namespace LockStep
+﻿namespace LockStepEngine
 {
     public enum EventType
     {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LockStep.Game
+namespace LockStepEngine
 {
     public interface IEventRegisterService : IService
     {

@@ -1,10 +1,8 @@
 ﻿using System.ComponentModel.Design;
 using System.Threading;
-using LockStep.Network;
-using LockStep.Util;
 using UnityEngine;
 
-namespace LockStep.Game
+namespace LockStepEngine.Game
 {
     public class Lanucher : ILifeCycle
     {
@@ -18,6 +16,8 @@ namespace LockStep.Game
         }
 
         private ServiceContainer serviceContainer;
+        private EventRegisterService eventRegisterService;
+        private ManagerContainer managerContainer;
         private OneThreadSynchronizationContext syncContext;
 
 
@@ -31,10 +31,17 @@ namespace LockStep.Game
             instance = this;
             
             serviceContainer = container as ServiceContainer;;
+            eventRegisterService = new EventRegisterService();
+            managerContainer = new ManagerContainer();
             syncContext = new OneThreadSynchronizationContext();
             SynchronizationContext.SetSynchronizationContext(syncContext);
             UtilSystem.StartService();
 
+        }
+
+        public void OnAwake(ServiceContainer serviceContainer)
+        {
+            throw new System.NotImplementedException();
         }
 
         public void OnStart()

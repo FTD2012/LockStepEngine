@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace LockStep
+namespace LockStepEngine
 {
     public delegate void EventHandler(object param);
 
@@ -67,7 +67,6 @@ namespace LockStep
                 isTriggingEvent = true;
                 foreach (var eventHandler in eventHandlerList)
                 {
-                    eventHandler.DynamicInvoke(param);
                     eventHandler.Invoke(param);
                 }
             }

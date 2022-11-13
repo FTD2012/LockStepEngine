@@ -1,8 +1,8 @@
-﻿namespace LockStep.Game
+﻿namespace LockStepEngine
 {
     public interface ILifeCycle
     {
-        void OnAwake(IServiceContainer serviceContainer);
+        void OnAwake(ServiceContainer serviceContainer);
         void OnStart();
         void OnApplicationQuit();
         void OnDestroy();

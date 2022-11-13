@@ -1,4 +1,4 @@
-﻿namespace LockStep.Util
+﻿namespace LockStepEngine
 {
     // TODO: ljm >>> remove
     public static class UtilSystem

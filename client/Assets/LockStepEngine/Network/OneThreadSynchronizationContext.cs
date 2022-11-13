@@ -2,7 +2,7 @@
 using System.Collections.Concurrent;
 using System.Threading;
 
-namespace LockStep.Network
+namespace LockStepEngine
 {
     public class OneThreadSynchronizationContext : SynchronizationContext
     {
