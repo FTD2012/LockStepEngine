@@ -1,0 +1,12 @@
+﻿using System;
+
+namespace LockStepEngine
+{
+    [Serializable]
+    public class SpawnerInfo : INeedBackup
+    {
+        public LFloat spawnTime;
+        public LVector3 spawnPoint;
+        public int prefabId;
+    }
+}

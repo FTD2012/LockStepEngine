@@ -1,6 +1,6 @@
 ﻿namespace LockStepEngine
 {
-    public class SimulatorService //: BaseGameService, ISimulatorService, IDebugService
+    public class SimulatorService : BaseGameService, ISimulatorService, IDebugService
     {
         public static SimulatorService Instance { get; private set; }
         public int debugRockBackToTick;
@@ -10,7 +10,7 @@
         public const int MaxPredictFrameCount = 30;
 
         public World World => world;
-        public int Pint => cmdBuffer?.Ping ?? 0;
+        public int Ping => cmdBuffer?.Ping ?? 0;
         public int Delay => cmdBuffer?.Delay ?? 0;
         public int TargetTick => tickSinceGameStart + FramePredictCount;
         public int InputTargetTick => tickSinceGameStart + PreSendInputCount;
@@ -28,10 +28,8 @@
         private IFrameBuffer cmdBuffer;
         private HashHelper hashHelper;
         private DumpHelper dumpHelper;
-        // private Msg_G2C_GameStartInfo gameStartInfo;
         private byte[] allActors;
         private int tickSinceGameStart;
-        // private Msg_ReqMissFrame videoFrame;
         private bool isInitVideo;
         private int tickOnLastJumpTo;
         private long timestampOnLastJumpToMS;
@@ -39,30 +37,34 @@
         private IManagerContainer managerContainer;
         private IServiceContainer serviceContainer;
         private bool hasReceiveInputMsg;
-        // private PlayerInput[] playerInputs => world.PlayerInputs;
+        private Msg_G2C_GameStartInfo gameStartInfo;
+        private Msg_ReqMissFrame videoFrame;
+        private PlayerInput[] playerInputs => world.PlayerInputs;
 
         public SimulatorService()
         {
             Instance = this;
         }
 
-        public /*override*/ void InitReference(IServiceContainer _serviceContainer, IManagerContainer _managerContainer)
+        public override void InitReference(IServiceContainer _serviceContainer, IManagerContainer _managerContainer)
         {
-            // base.InitReference(_serviceContainer, _managerContainer);
+            base.InitReference(_serviceContainer, _managerContainer);
             serviceContainer = _serviceContainer;
             managerContainer = _managerContainer;
         }
 
-        public /*override*/ void OnStart()
+        public override void OnStart()
         {
             SnapshotFrameInterval = 1;
-            // if (constantStateService.IsVideoMode)
-            // {
-            //     SnapshotFrameInterval = constantStateService.SnapshotFrameInterval;
-            // }
-            
-            cmdBuffer = new FrameBuffer()
-            
+            if (constantStateService.IsVideoMode)
+            {
+                SnapshotFrameInterval = constantStateService.SnapshotFrameInterval;
+            }
+
+            cmdBuffer = new FrameBuffer(this, networkService, 2000, SnapshotFrameInterval, MaxPredictFrameCount);
+            world = new World();
+            hashHelper = new HashHelper(serviceContainer, world, networkService, cmdBuffer);
+            dumpHelper = new DumpHelper(serviceContainer, world, hashHelper);
         }
         
     }

@@ -18,35 +18,74 @@ namespace LockStepEngine.Game
         private ServiceContainer serviceContainer;
         private EventRegisterService eventRegisterService;
         private ManagerContainer managerContainer;
+        private TimeMachineContainer timeMachineContainer;
         private OneThreadSynchronizationContext syncContext;
+        private SimulatorService simulatorService = new SimulatorService();
+        
 
-
-        public void OnAwake(IServiceContainer container)
+        public void OnAwake(ServiceContainer _serviceContainer)
         {
+            if (_serviceContainer == null)
+            {
+                GLog.Error("ServiceContainer is invalid!");
+                return;
+            }
+            serviceContainer = _serviceContainer;;
+            
             if (instance != null)
             {
-                Debug.LogError("LifeCycle Error: Awake more than once!!");
+                GLog.Error("LifeCycle Error: Awake more than once!");
                 return;;
             }
             instance = this;
             
-            serviceContainer = container as ServiceContainer;;
             eventRegisterService = new EventRegisterService();
             managerContainer = new ManagerContainer();
+            timeMachineContainer = new TimeMachineContainer();
             syncContext = new OneThreadSynchronizationContext();
             SynchronizationContext.SetSynchronizationContext(syncContext);
             UtilSystem.StartService();
 
-        }
+            foreach (var service in serviceContainer.GetAll())
+            {
+                if (service is BaseService baseService)
+                {
+                    managerContainer.RegisterManager(baseService);
+                }
+                
+                if (service is ITimeMachine timeMachine)
+                {
+                    timeMachineContainer.RegisterTimeMachine(timeMachine);
+                }
+            }
 
-        public void OnAwake(ServiceContainer serviceContainer)
-        {
-            throw new System.NotImplementedException();
+            serviceContainer.Register(timeMachineContainer);
+            serviceContainer.Register(eventRegisterService);
         }
 
         public void OnStart()
         {
-            throw new System.NotImplementedException();
+            foreach (var service in managerContainer.serviceList)
+            {
+                service.InitReference(serviceContainer, managerContainer);
+            }
+
+            foreach (var service in managerContainer.serviceList)
+            {
+                eventRegisterService.RegisterEvent<EventType, EventHandler>("OnEvent_", "OnEvent_".Length, EventHelper.AddListener, service);
+            }
+
+            foreach (var service in managerContainer.serviceList)
+            {
+                service.OnAwake(serviceContainer);
+            }
+            
+            
+        }
+
+        public void _DoAwake(ServiceContainer serviceContainer)
+        {
+            
         }
 
         public void OnApplicationQuit()
