@@ -2,7 +2,7 @@
 {
     public interface ILifeCycle
     {
-        void OnAwake(ServiceContainer serviceContainer);
+        void OnAwake(IServiceContainer serviceContainer);
         void OnStart();
         void OnApplicationQuit();
         void OnDestroy();

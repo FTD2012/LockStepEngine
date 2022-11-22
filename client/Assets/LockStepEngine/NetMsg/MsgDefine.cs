@@ -24,6 +24,11 @@ namespace LockStepEngine
     {
         
     }
+    
+    [Serializable]
+    [SelfImplement]
+    [Udp]
+    public class Msg_ServerFrames : 
 
     #endregion
 

@@ -14,7 +14,7 @@ namespace LockStepEngine
         }
 
         public virtual void OnInit(object objParent) { }
-        public virtual void OnAwake(ServiceContainer _serviceContainer) { }
+        public virtual void OnAwake(IServiceContainer _serviceContainer) { }
         public virtual void OnStart() { }
         public virtual void OnDestroy() { }
         public virtual void OnApplicationQuit() { }

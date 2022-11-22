@@ -27,7 +27,7 @@ namespace LockStepEngine
             Tick = tick;
         }
 
-        public void StartSimulate(ServiceContainer _serviceContainer, IManagerContainer _managerContainer)
+        public void StartSimulate(IServiceContainer _serviceContainer, IManagerContainer _managerContainer)
         {
             Instance = this;
             serviceContainer = _serviceContainer;
@@ -80,7 +80,7 @@ namespace LockStepEngine
             MyPlayer = allPlayer[localPlayerId];
         }
 
-        public void Step()
+        public void Step(bool isNeedGenSnap = true)
         {
             if (commonStateService.IsPause)
             {

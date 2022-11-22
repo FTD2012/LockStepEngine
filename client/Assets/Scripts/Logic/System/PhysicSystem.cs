@@ -34,7 +34,7 @@ namespace LockStepEngine
 
         public int showTreeId = 0;
 
-        public override void OnAwake(ServiceContainer services)
+        public override void OnAwake(IServiceContainer services)
         {
             _instance = this;
             config = gameConfigService.CollisionConfig;

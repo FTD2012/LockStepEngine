@@ -2,6 +2,13 @@
 {
     public enum EventType
     {
+        VideoLoadProgress,
         
+        LevelLoadProgress,
+        
+        SimulationStart,
+        
+        PursueFrameProcess,
+        PursueFrameDone,
     }
 }
