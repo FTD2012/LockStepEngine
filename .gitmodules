@@ -1,0 +1,3 @@
+[submodule "Unity/Assets/Scripts/Framework"]
+	path = Unity/Assets/Scripts/Framework
+	url = https://github.com/FTD2012/Framework
