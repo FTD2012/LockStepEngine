@@ -5,7 +5,9 @@ using Lockstep;
 using Lockstep.Collision2D;
 using Lockstep.Logic;
 using Lockstep.Math;
+using UnityEngine;
 using Debug = Lockstep.Logging.Debug;
+using Object = UnityEngine.Object;
 
 namespace Lockstep.Logic {
     [Serializable]
@@ -51,6 +53,12 @@ namespace Lockstep.Logic {
         }
 
         public override void DoDestroy(){
+            if (engineTransform is Transform entityTransform)
+            {
+                Object.Destroy(entityTransform.gameObject);
+            }
+            engineTransform = null;
+            
             foreach (var comp in allComponents) {
                 comp.DoDestroy();
             }

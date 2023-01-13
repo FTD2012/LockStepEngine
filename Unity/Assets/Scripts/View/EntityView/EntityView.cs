@@ -27,10 +27,10 @@ namespace LockstepTutorial {
 
         private void Update(){
             var pos = entity.transform.Pos3.ToVector3();
-            transform.position = Vector3.Lerp(transform.position, pos, 0.3f);
+            transform.position = Vector3.Lerp(transform.position, pos, 1f);
             var deg = entity.transform.deg.ToFloat();
             //deg = Mathf.Lerp(transform.rotation.eulerAngles.y, deg, 0.3f);
-            transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.Euler(0, deg, 0), 0.3f);
+            transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.Euler(0, deg, 0), 1f);
         }    
         
         private void OnDrawGizmos(){

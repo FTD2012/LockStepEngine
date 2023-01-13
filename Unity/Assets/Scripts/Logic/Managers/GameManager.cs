@@ -1,27 +1,26 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
+using Framework;
 using Lockstep.Collision2D;
 using Lockstep.Logic;
-using Lockstep.PathFinding;
 using Lockstep.Game;
 using Lockstep.Math;
-using Lockstep.Serialization;
 using Lockstep.Util;
 using UnityEngine;
 using Debug = Lockstep.Logging.Debug;
-using Profiler = Lockstep.Util.Profiler;
 
-namespace LockstepTutorial {
-    public class GameManager : UnityBaseManager {
+namespace LockstepTutorial
+{
+    public class GameManager : UnityBaseManager
+    {
         public static GameManager Instance { get; private set; }
         public static PlayerInput CurGameInput = new PlayerInput();
         public int MaxEnemyCount = 10;
 
         [Header("ClientMode")] public bool IsClientMode;
         public PlayerServerInfo ClientModeInfo = new PlayerServerInfo();
+        public bool isManualPlayMode;
+        public int targetFrameIdx = -1;
 
         [Header("Recorder")] public bool IsReplay = false;
         public bool SyncWithView = false;
@@ -39,7 +38,7 @@ namespace LockstepTutorial {
         public int curFrameIdx = 0;
         [HideInInspector] public FrameInput curFrameInput;
         [HideInInspector] public PlayerServerInfo[] playerServerInfos;
-        [HideInInspector] public List<FrameInput> frames = new List<FrameInput>();
+        public List<FrameInput> frames = new List<FrameInput>();
 
         [Header("Ping")] public static int PingVal;
         public static List<float> Delays = new List<float>();
@@ -51,9 +50,11 @@ namespace LockstepTutorial {
         [HideInInspector] public float remainTime; // remain time to update
         private NetClient netClient;
         private List<UnityBaseManager> _mgrs = new List<UnityBaseManager>();
-        
-        private static string _traceLogPath {
-            get {
+
+        private static string _traceLogPath
+        {
+            get
+            {
 #if UNITY_STANDALONE_OSX
                 return $"/tmp/LPDemo/Dump_{Instance.localPlayerId}.txt";
 #else
@@ -62,12 +63,8 @@ namespace LockstepTutorial {
             }
         }
 
-
-        public void RegisterManagers(UnityBaseManager mgr){
-            _mgrs.Add(mgr);
-        }
-
-        private void Awake(){
+        private void Awake()
+        {
             Screen.SetResolution(1024, 768, false);
             gameObject.AddComponent<PingMono>();
             gameObject.AddComponent<InputMono>();
@@ -76,58 +73,79 @@ namespace LockstepTutorial {
             _Awake();
         }
 
-        private void Start(){
+        private void Start()
+        {
             _Start();
         }
-
-        private void Update()
+        
+        private void _Awake()
         {
-            hasStepThisFrame = false;
-            _DoUpdate();
-        }
-
-        private void _Awake(){
 #if !UNITY_EDITOR
             IsReplay = false;
 #endif
+            curFrameIdx = 0;
             Application.targetFrameRate = 60;
             DoAwake();
-            foreach (var mgr in _mgrs) {
+            foreach (var mgr in _mgrs)
+            {
                 mgr.DoAwake();
             }
         }
-
-
-        private void _Start(){
+        
+        private void _Start()
+        {
             DoStart();
-            foreach (var mgr in _mgrs) {
+            foreach (var mgr in _mgrs)
+            {
                 mgr.DoStart();
             }
 
             Debug.Trace("Before StartGame _IdCounter" + BaseEntity.IdCounter);
-            if (!IsReplay && !IsClientMode) {
+            if (!IsReplay && !IsClientMode)
+            {
                 netClient = new NetClient();
                 netClient.Start();
-                netClient.Send(new Msg_JoinRoom() {name = Application.dataPath});
+                netClient.Send(new Msg_JoinRoom() { name = Application.dataPath });
             }
-            else {
+            else
+            {
                 StartGame(0, playerServerInfos, localPlayerId);
             }
         }
 
+        private void RegisterManagers(UnityBaseManager mgr)
+        {
+            _mgrs.Add(mgr);
+        }
 
-        private void _DoUpdate(){
+        private void Update()
+        {
+            _DoUpdate();
+        }
+
+        private void _DoUpdate() 
+        {
             if (!_hasStart) return;
             remainTime += Time.deltaTime;
-            while (remainTime >= 0.03f && (!SyncWithView || !hasStepThisFrame)) {
+
+            if (isManualPlayMode)
+            {
+                return;
+            }
+
+            hasStepThisFrame = false;
+            var isTargetFrameEnable = targetFrameIdx > 0;
+            while ((remainTime >= 0.03f && !isTargetFrameEnable || curFrameIdx < targetFrameIdx) && (!SyncWithView || !hasStepThisFrame))
+            {
                 remainTime -= 0.03f;
                 //send input
-                if (!IsReplay) {
+                if (!IsReplay)
+                {
                     SendInput();
                 }
 
-
-                if (GetFrame(curFrameIdx) == null) {
+                if (GetFrame(curFrameIdx) == null)
+                {
                     return;
                 }
 
@@ -136,12 +154,14 @@ namespace LockstepTutorial {
             }
         }
 
-        public static void StartGame(Msg_StartGame msg){
+        public static void StartGame(Msg_StartGame msg)
+        {
             UnityEngine.Debug.Log("StartGame");
             Instance.StartGame(msg.mapId, msg.playerInfos, msg.localPlayerId);
         }
 
-        public void StartGame(int mapId, PlayerServerInfo[] playerInfos, int localPlayerId){
+        public void StartGame(int mapId, PlayerServerInfo[] playerInfos, int localPlayerId)
+        {
             _hasStart = true;
             curMapId = mapId;
 
@@ -150,17 +170,20 @@ namespace LockstepTutorial {
             this.localPlayerId = localPlayerId;
             Debug.TraceSavePath = _traceLogPath;
             allPlayers.Clear();
-            for (int i = 0; i < playerCount; i++) {
+            for (int i = 0; i < playerCount; i++)
+            {
                 Debug.Trace("CreatePlayer");
-                allPlayers.Add(new Player() {localId = i});
+                allPlayers.Add(new Player() { localId = i });
             }
 
             //create Players 
-            for (int i = 0; i < playerCount; i++) {
+            for (int i = 0; i < playerCount; i++)
+            {
                 var playerInfo = playerInfos[i];
                 var go = HeroManager.InstantiateEntity(allPlayers[i], playerInfo.PrefabId, playerInfo.initPos);
                 //init mover
-                if (allPlayers[i].localId == localPlayerId) {
+                if (allPlayers[i].localId == localPlayerId)
+                {
                     MyPlayerTrans = go.transform;
                 }
             }
@@ -168,23 +191,27 @@ namespace LockstepTutorial {
             MyPlayer = allPlayers[localPlayerId];
         }
 
-
-        public void SendInput(){
-            if (IsClientMode) {
-                PushFrameInput(new FrameInput() {
+        public void SendInput()
+        {
+            if (IsClientMode)
+            {
+                PushFrameInput(new FrameInput()
+                {
                     tick = curFrameIdx,
-                    inputs = new PlayerInput[] {CurGameInput}
+                    inputs = new PlayerInput[] { CurGameInput }
                 });
                 return;
             }
 
             predictTickCount = 2; //Mathf.Clamp(Mathf.CeilToInt(pingVal / 30), 1, 20);
-            if (inputTick > predictTickCount + _maxServerFrameIdx) {
+            if (inputTick > predictTickCount + _maxServerFrameIdx)
+            {
                 return;
             }
 
             var playerInput = CurGameInput;
-            netClient?.Send(new Msg_PlayerInput() {
+            netClient?.Send(new Msg_PlayerInput()
+            {
                 input = playerInput,
                 tick = inputTick
             });
@@ -194,146 +221,219 @@ namespace LockstepTutorial {
             inputTick++;
         }
 
-
-        private void Step(){
+        private void Step()
+        {
             UpdateFrameInput();
-            if (IsReplay) {
-                if (curFrameIdx < frames.Count) {
+            if (IsReplay)
+            {
+                if (curFrameIdx < frames.Count-1)
+                {
                     Replay(curFrameIdx);
                     curFrameIdx++;
                 }
             }
-            else {
+            else
+            {
                 Recoder();
                 //send hash
-                netClient?.Send(new Msg_HashCode() {
+                netClient?.Send(new Msg_HashCode()
+                {
                     tick = curFrameIdx,
                     hash = GetHash()
                 });
                 TraceHelper.TraceFrameState();
                 curFrameIdx++;
             }
+
+            EventManager.TriggerEvent(Notification.UPDATE_FRAME);
         }
 
-        private void Recoder(){
+        public void StepPreviousFrame()
+        {
+            JumpToFrame(Math.Max(0, --curFrameIdx));
+            EventManager.TriggerEvent(Notification.UPDATE_FRAME);
+        }
+
+        public void StepNextFrame()
+        {
+            curFrameIdx = Math.Min(frames.Count - 1, ++curFrameIdx);
+            UpdateFrameInput();
+            if (IsReplay)
+            {
+                if (curFrameIdx < frames.Count)
+                {
+                    Replay(curFrameIdx);
+                }
+            }
+
+            EventManager.TriggerEvent(Notification.UPDATE_FRAME);
+        }
+
+        public void JumpToFrame(int targetFrame)
+        {
+            if (!IsReplay)
+            {
+                return;
+            }
+
+            OnDestroy();
+            
+            
+            _Awake();
+            _Start();
+            targetFrameIdx = Math.Min(targetFrame, frames.Count - 1);
+            _DoUpdate();
+        }
+
+        private void Recoder()
+        {
             _Update();
         }
 
 
-        private void Replay(int frameIdx){
+        private void Replay(int frameIdx)
+        {
             _Update();
         }
 
-        private void _Update(){
+        private void _Update()
+        {
             var deltaTime = new LFloat(true, 30);
             DoUpdate(deltaTime);
-            foreach (var mgr in _mgrs) {
+            foreach (var mgr in _mgrs)
+            {
                 mgr.DoUpdate(deltaTime);
             }
         }
 
-
-        private void OnDestroy(){
-            netClient?.Send(new Msg_QuitRoom());
-            foreach (var mgr in _mgrs) {
-                mgr.DoDestroy();
-            }
-
-            if (!IsReplay) {
-                RecordHelper.Serialize(recordFilePath, this);
-            }
-
-            Debug.FlushTrace();
-            DoDestroy();
-        }
-
-        public override void DoAwake(){
+        public override void DoAwake()
+        {
             Instance = this;
             var mgrs = GetComponents<UnityBaseManager>();
-            foreach (var mgr in mgrs) {
-                if (mgr != this) {
+            foreach (var mgr in mgrs)
+            {
+                if (mgr != this)
+                {
                     RegisterManagers(mgr);
                 }
             }
         }
 
-
-        public override void DoStart(){
-            if (IsReplay) {
+        public override void DoStart()
+        {
+            if (IsReplay)
+            {
                 RecordHelper.Deserialize(recordFilePath, this);
             }
 
-            if (IsClientMode) {
+            if (IsClientMode)
+            {
                 playerCount = 1;
                 localPlayerId = 0;
-                playerServerInfos = new PlayerServerInfo[] {ClientModeInfo};
+                playerServerInfos = new PlayerServerInfo[] { ClientModeInfo };
                 frames = new List<FrameInput>();
             }
         }
 
+        public override void DoUpdate(LFloat deltaTime)
+        {
+            
+        }
 
-        public override void DoUpdate(LFloat deltaTime){ }
-
-        public override void DoDestroy(){
+        public override void DoDestroy()
+        {
             //DumpPathFindReqs();
         }
 
-
-        public static void PushFrameInput(FrameInput input){
+        public static void PushFrameInput(FrameInput input)
+        {
             var frames = Instance.frames;
-            for (int i = frames.Count; i <= input.tick; i++) {
+            for (int i = frames.Count; i <= input.tick; i++)
+            {
                 frames.Add(new FrameInput());
             }
 
-            if (frames.Count == 0) {
+            if (frames.Count == 0)
+            {
                 Instance.remainTime = 0;
             }
 
             _maxServerFrameIdx = Math.Max(_maxServerFrameIdx, input.tick);
-            if (Instance.tick2SendTimer.TryGetValue(input.tick, out var val)) {
+            if (Instance.tick2SendTimer.TryGetValue(input.tick, out var val))
+            {
                 Delays.Add(Time.realtimeSinceStartup - val);
             }
 
             frames[input.tick] = input;
         }
 
-
-        public FrameInput GetFrame(int tick){
-            if (frames.Count > tick) {
+        public FrameInput GetFrame(int tick)
+        {
+            if (frames.Count > tick)
+            {
                 var frame = frames[tick];
-                if (frame != null && frame.tick == tick) {
+                if (frame != null && frame.tick == tick)
+                {
                     return frame;
                 }
             }
-
             return null;
         }
 
-        private void UpdateFrameInput(){
+        private void UpdateFrameInput()
+        {
             curFrameInput = GetFrame(curFrameIdx);
             var frame = curFrameInput;
-            for (int i = 0; i < playerCount; i++) {
+            for (int i = 0; i < playerCount; i++)
+            {
                 allPlayers[i].input = frame.inputs[i];
                 Debug.Log("[ViewFrame: " + Time.frameCount + "][LogicFrame: " + curFrameInput.tick + "] Input: " + allPlayers[i].input);
             }
         }
 
-
-        //{string.Format("{0:yyyyMMddHHmmss}", DateTime.Now)}_
-        public int GetHash(){
+        // {string.Format("{0:yyyyMMddHHmmss}", DateTime.Now)}_
+        private int GetHash()
+        {
             int hash = 1;
             int idx = 0;
-            foreach (var entity in allPlayers) {
+            foreach (var entity in allPlayers)
+            {
                 hash += entity.curHealth.GetHash() * PrimerLUT.GetPrimer(idx++);
                 hash += entity.transform.GetHash() * PrimerLUT.GetPrimer(idx++);
             }
 
-            foreach (var entity in EnemyManager.Instance.allEnemy) {
+            foreach (var entity in EnemyManager.Instance.allEnemy)
+            {
                 hash += entity.curHealth.GetHash() * PrimerLUT.GetPrimer(idx++);
                 hash += entity.transform.GetHash() * PrimerLUT.GetPrimer(idx++);
             }
 
             return hash;
+        }
+
+        private void OnDestroy()
+        {
+            targetFrameIdx = -1;
+            netClient?.Send(new Msg_QuitRoom());
+            foreach (var player in allPlayers)
+            {
+                player.DoDestroy();
+            }
+            allPlayers.Clear();
+            
+            foreach (var mgr in _mgrs)
+            {
+                mgr.DoDestroy();
+            }
+            _mgrs.Clear();
+
+            if (!IsReplay)
+            {
+                RecordHelper.Serialize(recordFilePath, this);
+            }
+
+            Debug.FlushTrace();
+            DoDestroy();
         }
     }
 }

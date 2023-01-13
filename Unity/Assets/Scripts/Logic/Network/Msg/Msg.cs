@@ -6,6 +6,7 @@ using Lockstep.Serialization;
 using IMessage = Lockstep.Network.IMessage;
 
 namespace Lockstep.Logic {
+    [Serializable]
     public class FrameInput : BaseFormater {
         public int tick;
         public PlayerInput[] inputs;
@@ -30,6 +31,11 @@ namespace Lockstep.Logic {
             }
 
             return val;
+        }
+
+        public PlayerInput GetPlayerInputById(int id)
+        {
+            return inputs[id];
         }
     }
 
@@ -59,6 +65,7 @@ namespace Lockstep.Logic {
         //other infos...
     }
 
+    [Serializable]
     public class PlayerInput : BaseFormater {
         public LVector2 mousePos;
         public LVector2 inputUV;

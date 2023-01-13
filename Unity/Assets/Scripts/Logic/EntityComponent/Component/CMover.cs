@@ -30,6 +30,7 @@ namespace LockstepTutorial {
             if (needChase) {
                 var dir = input.inputUV.normalized;
                 transform.pos = transform.pos + dir * speed * deltaTime;
+                GLog.Error("transform.pos" + transform.pos);
                 var targetDeg = dir.ToDeg();
                 transform.deg = CTransform2D.TurnToward(targetDeg, transform.deg, player.turnSpd * deltaTime, out var hasReachDeg);
             }

@@ -22,5 +22,11 @@ namespace LockstepTutorial {
                 Fire(input.skillId);
             }
         }
+
+        public override void DoDestroy()
+        {
+            
+            base.DoDestroy();
+        }
     }
 }
